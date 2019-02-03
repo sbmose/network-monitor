@@ -35,7 +35,13 @@ module.exports = function(client, io, callback) {
             if (typeof callback === 'function') closeDb(callback, {internal: true, err: err})
             return console.log(err)
           }
-
+          // con.query(`ALTER TABLE clients ADD COLUMN Comment TEXT`, function(err) {
+          //   if (err) {
+          //     console.log(err)
+          //     closeDb(con, {internal: true, err: err})
+          //     return
+          //   }
+          // });
           createTable(con, client)
         })
       })
@@ -43,7 +49,7 @@ module.exports = function(client, io, callback) {
   }
 
   function createTable(con, client) {
-      con.query(`CREATE TABLE IF NOT EXISTS \`${config.database.tableName}\` (Name TEXT, IP TEXT, Pending INT)`, function(err) {
+      con.query(`CREATE TABLE IF NOT EXISTS \`${config.database.tableName}\` (Name TEXT, IP TEXT, Pending INT, Comment TEXT)`, function(err) {
         if (err) {
           console.log(err)
           closeDb(con, {internal: true, err: err})
@@ -68,7 +74,7 @@ module.exports = function(client, io, callback) {
       pingClient(client, function(dead, client) {
         const pending = dead ? true : false
         const status = pending ? false : true
-        con.query('INSERT IGNORE INTO clients (Name, IP, Pending) VALUES (?, ?, ?)', [client.name, ip, pending ? 1 : 0], function(err) {
+        con.query('INSERT IGNORE INTO clients (Name, IP, Pending, Comment) VALUES (?, ?, ?, ?)', [client.name, ip, pending ? 1 : 0, client.comment], function(err) {
           if (err) {
             console.log(err)
             if (clientList.length === 1) closeDb(con, {internal: true, err: err})
@@ -85,7 +91,8 @@ module.exports = function(client, io, callback) {
             name: client.newName || client.name,
             ip: ip,
             status: pending ? false : true,
-            pending: pending
+            pending: pending,
+            comment: client.comment,
           }
           io.emit('importLog', {error: null, content: `Added: Client "${client.name}" with IP "${client.ip}", status is ${pending ? 'PENDING' : status ? 'UP' : 'DOWN'}`})
           io.emit('importStatus', `${(completed/clientList.length*100).toFixed(2)}%`)
@@ -126,7 +133,7 @@ module.exports = function(client, io, callback) {
   }
 
   function readAllClients(con) { // Only run once on server startup to initialize all the clients
-    con.query("SELECT Name, IP, Pending FROM clients", function(err, rows) {
+    con.query("SELECT * FROM clients", function(err, rows) {
       let totalRows = rows.length
       let completed = 0
       if (rows.length === 0) return closeDb(con)
@@ -137,7 +144,8 @@ module.exports = function(client, io, callback) {
             name: client.Name,
             ip: client.IP,
             status: dead ? false : true,
-            pending: client.Pending == 1 ? true : false
+            pending: client.Pending == 1 ? true : false,
+            comment: client.Comment
           }
           if (++completed === totalRows) return closeDb(con)
         })

@@ -4,7 +4,7 @@
   "sqlCreds": {
     "host": "localhost",
     "user": "root",
-    "password": "password"
+    "password": ""
   },
   "database": {
     "name": "noc_clients",

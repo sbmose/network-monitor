@@ -23,7 +23,8 @@
   },
   "scripts": {
     "build": "webpack",
-    "startserver": "set NODE_ENV=production&&node server.js"
+    "startserver": "set NODE_ENV=production&&node server.js",
+    "startdev": "set NODE_ENV=production&&nodemon server.js"
   },
   "devDependencies": {
     "babel-core": "^6.25.0",

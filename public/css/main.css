@@ -1291,3 +1291,6 @@ th.centered.long {
 .config-expand-btn {
   padding: 15px;
 }
+#add-client-details.shown {
+  height: 300px;
+}

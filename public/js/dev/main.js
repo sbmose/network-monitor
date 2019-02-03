@@ -88,6 +88,7 @@ class Main extends React.Component {
       self.setState({webOnline: false})
     })
     socket.on('updatedClients', function(data) {
+      console.log('update hehe====>', data)
       self.updateClients(data)
     })
     socket.on('uptime', function(data) {
@@ -354,7 +355,11 @@ class IPTable extends React.Component {
   enterKey(e, fun) {
     if (e.keyCode === 13) fun(e)
   }
+
   render() {
+
+    console.log(this.state.clients)
+
     const allPages = []
     const clients = this.state.clients
     let currentPage = []
@@ -390,10 +395,11 @@ class IPTable extends React.Component {
             <tbody>
             <tr>
               <th className="centered sortable" onClick={() => this.sortStatus(this.state.clients)}>Status</th>
-              <th className="sortable" onClick={() => this.sortNames(this.state.clients)}>Client Name</th>
-              <th className="centered long sortable" onClick={() => this.sortIP(this.state.clients)}>IP</th>
+              <th className="centered sortable" onClick={() => this.sortNames(this.state.clients)}>Service Name</th>
+              {/* <th className="centered long sortable" onClick={() => this.sortIP(this.state.clients)}>IP</th>
               <th className="centered">Edit</th>
-              <th className="centered">Remove</th>
+              <th className="centered">Remove</th> */}
+              <th className="centered">Comments</th>
             </tr>
             {allPages[this.state.currentPage]}
             </tbody>
@@ -509,11 +515,12 @@ class IPRow extends React.Component {
     return (
       <tr className={rowClass}>
         <td className="centered unselectable" style={statusStyle}><div>{statusText}</div></td>
-        <td>{this.props.client.name}</td>
-        <td className="centered copy-area" ><div ref={(elem) => this._ipContainer = elem} onClick={(e) => this.showCopyDialog(e)}>{this.props.client.ip}</div><div className={copyDialogClass}></div></td>
+        <td className="centered">{this.props.client.name}</td>
+        {/* <td className="centered copy-area" ><div ref={(elem) => this._ipContainer = elem} onClick={(e) => this.showCopyDialog(e)}>{this.props.client.ip}</div><div className={copyDialogClass}></div></td>
 
         <td className="centered edit unselectable" onClick={() => this.props.editClient(this.props.client)}><i className="material-icons">mode_edit</i></td>
-        <td className="centered remove unselectable" onClick={() => this.removeClient()}><div><i className="material-icons">close</i></div></td>
+        <td className="centered remove unselectable" onClick={() => this.removeClient()}><div><i className="material-icons">close</i></div></td> */}
+        <td className="centered">{this.props.client.comment}</td>
       </tr>
     )
   }
@@ -657,9 +664,10 @@ class AddClient extends React.Component {
     if (e.target.disabled) return
     const clients = this.props.clients
     const clientIP = this.ipInput.value
+    const clientComment = this.commentInput.value
     const clientName = this.nameInput.value ? this.nameInput.value : clientIP
     this.nameInput.value = this.nameInput.value ? this.nameInput.value : clientIP
-    if (!clientIP || !clientName) return
+    if (!clientIP || !clientName || !clientComment) return
     for (var x in clients) {
       if (clientIP === clients[x].ip) {
         return this.setState({applyErr: true, errText: `IP already exists for client "${clients[x].name}"`, errZIndex: 10})
@@ -668,7 +676,8 @@ class AddClient extends React.Component {
 
     this.setState({applying: true, applyErr: false, errZIndex: 10})
     const self = this
-    request('/addclient', {client: {name: clientName, ip: clientIP}}, 'json', function(err) {
+    console.log("request")
+    request('/addclient', {client: {name: clientName, ip: clientIP, comment: clientComment}}, 'json', function(err) {
 
       if (err.internal) {
         return self.setState({applying: false, applyErr: true, errText: 'Internal database error'})
@@ -677,6 +686,7 @@ class AddClient extends React.Component {
       } else {
         self.nameInput.value = ''
         self.ipInput.value = ''
+        self.commentInput.value = ''
         self.setState({applying: false, expandedForm: false})
         setTimeout(function() {
           self.setState({errZIndex: -1})
@@ -727,6 +737,10 @@ class AddClient extends React.Component {
           <div className="input-field">
             <label htmlFor="new-client-ip">IP</label>
             <input type="text" ref={(elem) => this.ipInput = elem} className="form-control" id="new-client-ip" onKeyUp={(e) => this.enterKey(e)}/>
+          </div>
+          <div className="input-field">
+            <label htmlFor="new-client-comment">Comments</label>
+            <input type="text" ref={(elem) => this.commentInput = elem} className="form-control" id="new-client-comment" onKeyUp={(e) => this.enterKey(e)}/>
           </div>
 
           <div id="add-client-err" className={statusWrapperClass} style={{zIndex: this.state.errZIndex}} onClick={() => this.removeErr()}>

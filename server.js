@@ -102,7 +102,7 @@ app.post('/resources/addclient', jsonParser, function(req, res) {
     if (client.ip === ip) return res.json({err: `IP already exists for client "${clients[ip].name}".`})
   }
   client.action = 'add' // Any time a client is added/removed/updated, .action must be defined
-  if (!client.name || !client.ip) return res.json({empty: true})
+  if (!client.name || !client.ip || !client.comment) return res.json({empty: true})
   runDatabase(client, io, function(err) {
     if (err) res.json(err)
     else res.json({})
@@ -226,7 +226,7 @@ app.post('/resources/export', jsonParser, function(req, res) { // Export POST re
   activityLog.add(`Export operation started.`)
   try {
     const wb = {Sheets: {}, SheetNames: []}
-    var ws_data = [[ "Name", "IP"]];
+    var ws_data = [[ "Name", "IP", "Comment"]];
     for (var ip in clients) {
       ws_data.push([clients[ip].name, ip])
     }
@@ -307,7 +307,7 @@ app.post('/resources/setconfig', jsonParser, function(req, res) {
 
 function startServer() {
   console.log('Clients updated, starting webserver...')
-  const port = 8081
+  const port = 8086
   masterServer = server.listen(port, function () {
     console.log("Webserver on localhost, listening on port " + port + '. Connect via localIP:' + port)
     activityLog.add(`Webserver started`)
